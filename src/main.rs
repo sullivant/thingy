@@ -20,7 +20,11 @@ fn main() {
     // all created signals.
 
     loop {
-        println!("Signal value is: {}", thingy.get_signal());
-        std::thread::sleep(time::Duration::from_millis(1000));
+        println!(
+            "Signal value is: {}",
+            //thingy.get_signal().get_signal_status()
+            thingy.get_signal_directly()
+        );
+        std::thread::sleep(time::Duration::from_millis(500));
     }
 }
