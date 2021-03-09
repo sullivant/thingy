@@ -1,3 +1,4 @@
+use applied_device;
 use signal_device;
 use std::time;
 
@@ -18,6 +19,8 @@ fn main() {
     //
     // thingy.get_signal(String) should return a reference to the signal struct from the hashmap of
     // all created signals.
+
+    let mut applied_servo = applied_device::new();
 
     loop {
         println!(
