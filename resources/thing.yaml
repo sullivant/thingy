@@ -1,6 +1,7 @@
 device:
   name: thing
   coupler: 192.168.0.201
+  servo_lifter: 192.168.0.200
 signals:
   - name: diInputSensor
     type: input
