@@ -1,0 +1,10 @@
+device:
+  name: thing
+  coupler: 192.168.0.201
+signals:
+  - name: diInputSensor
+    type: input
+    offset: 16
+  - name: diOtherSensor
+    type: input
+    offset: 17
