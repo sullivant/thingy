@@ -21,13 +21,18 @@ fn main() {
     let mut signal_device = signal_device::new(format!("thing"));
     println!("{}", signal_device.to_string());
 
+    let signal_name: String = "diInputSensor".to_string();
+
     // The main application/device loop
     loop {
-        if signal_device.get_signal_directly() {
-            servo_lifter.move_servo(400, 400, 1500, EXTEND_POS);
-        } else {
-            servo_lifter.move_servo(400, 400, 1500, RETRACT_POS);
-        }
+        match signal_device.get_signal_directly(&signal_name) {
+            Ok(true) => servo_lifter.move_servo(400, 400, 1500, EXTEND_POS),
+            Ok(false) => servo_lifter.move_servo(400, 400, 1500, RETRACT_POS),
+            Err(e) => {
+                println!("{}", e)
+            }
+        };
+
         std::thread::sleep(time::Duration::from_millis(5));
     }
 }
