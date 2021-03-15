@@ -6,6 +6,14 @@ static RETRACT_POS: u64 = 20000;
 static EXTEND_POS: u64 = 300000;
 
 fn main() {
+    // This is the applied servo that is controllable via modbus tcp
+    let mut servo_lifter = match applied_device::new(format!("thing"), format!("servo_lifter")) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("Unable to create applied device, cannot continue: {}", e);
+            return;
+        }
+    };
     // This is the B&R brick
     let mut signal_device = match signal_device::new(format!("thing")) {
         Ok(s) => s,
@@ -14,9 +22,6 @@ fn main() {
             return;
         }
     };
-
-    // This is the applied servo that is controllable via modbus tcp
-    let mut servo_lifter = applied_device::new(format!("thing"), format!("servo_lifter"));
 
     println!("{}", servo_lifter.to_string());
     println!("Servo status: {:?}", servo_lifter.get_servo_status());
