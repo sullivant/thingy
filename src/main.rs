@@ -6,20 +6,26 @@ static RETRACT_POS: u64 = 20000;
 static EXTEND_POS: u64 = 300000;
 
 fn main() {
+    // This is the B&R brick
+    let mut signal_device = match signal_device::new(format!("thing")) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("Unable to create signal device, cannot continue: {}", e);
+            return;
+        }
+    };
+
     // This is the applied servo that is controllable via modbus tcp
     let mut servo_lifter = applied_device::new(format!("thing"), format!("servo_lifter"));
-    println!("{}", servo_lifter.to_string());
 
+    println!("{}", servo_lifter.to_string());
     println!("Servo status: {:?}", servo_lifter.get_servo_status());
     println!("Servo alarms: {:?}", servo_lifter.get_servo_alarms());
+    println!("{}", signal_device.to_string());
 
+    // Start the actual device features needed
     servo_lifter.home_servo();
     servo_lifter.move_servo(400, 400, 1500, RETRACT_POS);
-
-    // This brick is a modbus device, with I/O.
-    // // This will setup all available signals
-    let mut signal_device = signal_device::new(format!("thing"));
-    println!("{}", signal_device.to_string());
 
     let signal_name: String = "diInputSensor".to_string();
 
