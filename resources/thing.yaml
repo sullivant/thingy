@@ -5,7 +5,7 @@ device:
 signals:
   - name: diInputSensor
     type: input
-    offset: 16
+    offset: 1
   - name: diOtherSensor
     type: input
     offset: 17
