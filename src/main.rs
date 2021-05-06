@@ -1,6 +1,5 @@
 use applied_device::AppliedDevice;
 use log::{error, info};
-use log4rs;
 use signal_scanner::SignalScanner;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -13,20 +12,20 @@ fn main() {
     log4rs::init_file("thingy/resources/log4rs.yaml", Default::default()).unwrap();
 
     // Create a modbus signal scanner and pass to it the B&R brick to scan
-    let signal_scanner = SignalScanner::new(format!("scanman!"));
+    let signal_scanner = SignalScanner::new("scanman!".to_string());
     let safe_scanner = Arc::new(Mutex::new(signal_scanner));
 
     // This is the B&R brick
-    let coupler = signal_device::new(format!("thing")).expect("Cannot continue:");
-    //signal_scanner.register_device(format!("brick"), coupler);
+    let coupler = signal_device::new("thing".to_string()).expect("Cannot continue:");
     safe_scanner
         .lock()
         .unwrap()
-        .register_device(format!("brick"), coupler);
+        .register_device("brick".to_string(), coupler);
 
     // *****************************
     // This is the applied servo that is controllable via modbus tcp
-    let mut servo_lifter = match AppliedDevice::new(format!("thing"), format!("servo_lifter")) {
+    let mut servo_lifter = match AppliedDevice::new("thing".to_string(), "servo_lifter".to_string())
+    {
         Ok(s) => s,
         Err(e) => {
             error!("Unable to create applied device, cannot continue: {}", e);
@@ -46,6 +45,7 @@ fn main() {
 
     // Create a vector of thread handles
     let alive = Arc::new(Mutex::new(true));
+    //let alive = Arc::new(AtomicBool::new(true));
     let alive_clone = Arc::clone(&alive);
     let mut handles = vec![];
     let safe_scan = Arc::clone(&safe_scanner);
