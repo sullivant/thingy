@@ -12,15 +12,18 @@ fn main() {
     log4rs::init_file("thingy/resources/log4rs.yaml", Default::default()).unwrap();
 
     // Create a modbus signal scanner and pass to it the B&R brick to scan
-    let signal_scanner = SignalScanner::new("scanman!".to_string());
-    let safe_scanner = Arc::new(Mutex::new(signal_scanner));
+    // Let's also create the mutex'd version for thread sharing
+    let core_signal_scanner = SignalScanner::new("scanman!".to_string());
+    let safe_signal_scanner = Arc::new(Mutex::new(core_signal_scanner));
 
-    // This is the B&R brick
+    // This is the B&R brick and its registration to the signal scanner
     let coupler = signal_device::new("thing".to_string()).expect("Cannot continue:");
-    safe_scanner
+    safe_signal_scanner
         .lock()
         .unwrap()
         .register_device("brick".to_string(), coupler);
+    let brick_name: String = "brick".to_string();
+    let signal_name: String = "diInputSensor".to_string();
 
     // *****************************
     // This is the applied servo that is controllable via modbus tcp
@@ -38,36 +41,31 @@ fn main() {
     // Start the actual device features needed
     servo_lifter.home_servo();
     servo_lifter.move_servo(400, 400, 1500, RETRACT_POS);
+
     // *****************************
-
-    let brick_name: String = "brick".to_string();
-    let signal_name: String = "diInputSensor".to_string();
-
     // Create a vector of thread handles
-    let alive = Arc::new(Mutex::new(true));
-    //let alive = Arc::new(AtomicBool::new(true));
+    let alive = Arc::new(Mutex::new(true)); // A flag by which we can tell threads to die
     let alive_clone = Arc::clone(&alive);
-    let mut handles = vec![];
-    let safe_scan = Arc::clone(&safe_scanner);
+    let mut thread_handles = vec![];
+    let clone_signal_scanner = Arc::clone(&safe_signal_scanner);
     let handle = thread::spawn(move || {
         info!("Scanner thread starting up.");
         while *alive_clone.lock().unwrap() {
-            safe_scan.lock().unwrap().refresh_signals().unwrap();
+            clone_signal_scanner
+                .lock()
+                .unwrap()
+                .refresh_signals()
+                .unwrap();
             thread::sleep(Duration::from_millis(1));
         }
         info!("Scanner thread told to shut down.  Shutting down.");
     });
-    handles.push(handle);
+    thread_handles.push(handle);
 
-    // Loop until we get the signal once.
+    // Loop until we get the signal to extend then do our thing
     loop {
-        // Update signals on the scanner device array,
-        // in the future this will be a thread fired off
-        // when the signal scanner is started
-        //signal_scanner.refresh_signals().unwrap();
-
-        let safe_scan = Arc::clone(&safe_scanner);
-        if safe_scan
+        let safe_scanner = Arc::clone(&safe_signal_scanner);
+        if safe_scanner
             .lock()
             .unwrap()
             .get_device_signal_status(&brick_name, &signal_name)
@@ -91,3 +89,5 @@ fn main() {
     servo_lifter.shutdown();
     info!("Servo status: {:?}", servo_lifter.get_servo_status());
 }
+
+fn cycle_once() {}
